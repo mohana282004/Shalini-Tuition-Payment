@@ -1,472 +1,261 @@
-
-/* SHALINI TUITION CENTER */
-
-const API_URL = 'https://script.google.com/macros/s/AKfycbxukpl7y6VzbHLVz_U7OxzgscTW0S8b-7bQJBv7u5UcT8M4m9TfJVkWz_ByzjGCNPhggg/exec';
-
-const CLASSES = [
-  'LKG', 'UKG', '1st', '2nd', '3rd', '4th',
-  '5th', '6th', '7th', '8th', '9th',
-  '10th', '11th', '12th'
-];
-
-let token = sessionStorage.getItem('stc_token') || '';
-let students = [];
-let editingRow = null;
-
-const $ = id => document.getElementById(id);
-
-/* ---------- API ---------- */
-
-async function api(action, data = {}) {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'text/plain;charset=utf-8'
-    },
-    body: JSON.stringify({
-      action,
-      token,
-      ...data
-    })
-  });
-
-  const result = await response.json();
-
-  if (!result.ok) {
-    if (result.error === 'unauthorized') {
-      showLogin();
-    }
-    throw new Error(result.error || 'Something went wrong.');
-  }
-
-  return result;
-}
-
-/* ---------- PAGE NAVIGATION ---------- */
-
-function showStudent() {
-  $('studentView').hidden = false;
-  $('loginView').hidden = true;
-  $('appView').hidden = true;
-}
-
-function showLogin() {
-  token = '';
-  sessionStorage.removeItem('stc_token');
-  students = [];
-
-  $('studentView').hidden = true;
-  $('appView').hidden = true;
-  $('loginView').hidden = false;
-  $('password').value = '';
-}
-
-async function showApp() {
-  $('studentView').hidden = true;
-  $('loginView').hidden = true;
-  $('appView').hidden = false;
-  await loadStudents();
-}
-
-$('adminOpenBtn').addEventListener('click', showLogin);
-
-$('backToStudentBtn').addEventListener('click', showStudent);
-
-/* ---------- STUDENT REGISTRATION ---------- */
-
-$('registrationForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-
-  const button = $('registerBtn');
-  const message = $('registrationMessage');
-
-  message.textContent = '';
-  button.disabled = true;
-  button.textContent = 'Submitting...';
-
-  const data = {
-    name: $('studentName').value.trim(),
-    parent: $('parentName').value.trim(),
-    cls: $('studentClass').value,
-    phone: $('studentPhone').value.trim(),
-    amount: Number($('studentAmount').value)
-  };
-
-  try {
-    await api('register', data);
-
-    message.textContent =
-      'Registration successful! Thank you.';
-
-    message.style.color = 'green';
-
-    $('registrationForm').reset();
-
-  } catch (error) {
-    message.textContent = error.message;
-    message.style.color = 'red';
-
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Submit Registration';
-  }
-});
-
-/* ---------- ADMIN LOGIN ---------- */
-
-$('loginForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-
-  $('loginError').textContent = '';
-  $('loginBtn').disabled = true;
-  $('loginBtn').textContent = 'Logging in...';
-
-  try {
-    const result = await api('login', {
-      password: $('password').value
-    });
-
-    token = result.token;
-    sessionStorage.setItem('stc_token', token);
-
-    await showApp();
-
-  } catch (error) {
-    $('loginError').textContent = error.message;
-
-  } finally {
-    $('loginBtn').disabled = false;
-    $('loginBtn').textContent = 'Log in';
-  }
-});
-
-/* ---------- ADMIN LOGOUT ---------- */
-
-$('logoutBtn').addEventListener('click', async function() {
-  try {
-    await api('logout');
-  } catch (error) {
-    // Continue to logout even if session has expired
-  }
-
-  showStudent();
-});
-
-/* ---------- LOAD STUDENTS ---------- */
-
-function setMessage(message) {
-  $('message').textContent = message;
-}
-
-async function loadStudents() {
-  setMessage('Loading students...');
-
-  try {
-    const result = await api('list');
-    students = result.students || [];
-
-    setMessage('');
-    render();
-
-  } catch (error) {
-    setMessage(error.message);
-  }
-}
-
-/* ---------- DASHBOARD RENDER ---------- */
-
-function render() {
-  const query = $('search').value.trim().toLowerCase();
-  const cls = $('classFilter').value;
-  const status = $('statusFilter').value;
-
-  const paid = students.filter(s => s.status === 'PAID').length;
-
-  $('totalCount').textContent = students.length;
-  $('paidCount').textContent = paid;
-  $('unpaidCount').textContent = students.length - paid;
-
-  const shown = getFiltered(query, cls, status);
-  const body = $('tableBody');
-
-  body.textContent = '';
-
-  shown.forEach(student => {
-    const tr = document.createElement('tr');
-
-    function addCell(value) {
-      const td = document.createElement('td');
-      td.textContent = value || '-';
-      tr.appendChild(td);
-      return td;
-    }
-
-    addCell(student.name);
-    addCell(student.cls);
-    addCell(student.parent);
-    addCell(student.phone);
-    addCell(student.amount ? '₹' + student.amount : '-');
-
-    const statusTd = document.createElement('td');
-    const badge = document.createElement('button');
-
-    badge.type = 'button';
-    badge.className =
-      'badge ' + (student.status === 'PAID' ? 'paid' : 'unpaid');
-    badge.textContent = student.status;
-    badge.title = 'Click to change payment status';
-
-    badge.addEventListener('click', () => toggleStatus(student));
-
-    statusTd.appendChild(badge);
-    tr.appendChild(statusTd);
-
-    const actionTd = document.createElement('td');
-    actionTd.className = 'actions';
-
-    actionTd.append(
-      makeButton('Edit', 'btn outline small',
-        () => openDialog(student)),
-      makeButton('Delete', 'btn danger small',
-        () => removeStudent(student))
-    );
-
-    tr.appendChild(actionTd);
-    body.appendChild(tr);
-  });
-
-  $('emptyMsg').hidden = shown.length > 0;
-
-  if (shown.length === 0) {
-    $('emptyMsg').textContent = students.length
-      ? 'No students match your search or filters.'
-      : 'No students registered yet.';
-  }
-}
-
-function getFiltered(query, cls, status) {
-  return students
-    .filter(s =>
-      (!query || s.name.toLowerCase().includes(query)) &&
-      (!cls || s.cls === cls) &&
-      (!status || s.status === status)
-    )
-    .sort((a, b) =>
-      CLASSES.indexOf(a.cls) - CLASSES.indexOf(b.cls) ||
-      a.name.localeCompare(b.name)
-    );
-}
-
-function makeButton(label, className, callback) {
-  const button = document.createElement('button');
-
-  button.type = 'button';
-  button.className = className;
-  button.textContent = label;
-  button.addEventListener('click', callback);
-
-  return button;
-}
-
-/* ---------- PAYMENT STATUS ---------- */
-
-async function toggleStatus(student) {
-  const next = student.status === 'PAID'
-    ? 'NOT PAID'
-    : 'PAID';
-
-  setMessage('Updating payment status...');
-
-  try {
-    await api('update', {
-      row: student.row,
-      name: student.name,
-      cls: student.cls,
-      parent: student.parent,
-      phone: student.phone,
-      amount: student.amount,
-      status: next
-    });
-
-    await loadStudents();
-    setMessage(student.name + ' marked as ' + next + '.');
-
-  } catch (error) {
-    setMessage(error.message);
-  }
-}
-
-/* ---------- DELETE STUDENT ---------- */
-
-async function removeStudent(student) {
-  if (!confirm('Delete ' + student.name + '?')) return;
-
-  try {
-    await api('delete', {
-      row: student.row
-    });
-
-    await loadStudents();
-    setMessage('Student deleted successfully.');
-
-  } catch (error) {
-    setMessage(error.message);
-  }
-}
-
-/* ---------- ADD / EDIT STUDENT ---------- */
-
-function openDialog(student) {
-  editingRow = student ? student.row : null;
-
-  $('dialogTitle').textContent =
-    student ? 'Edit student' : 'Add student';
-
-  $('nameInput').value = student ? student.name : '';
-  $('parentInput').value = student ? student.parent : '';
-  $('classInput').value = student ? student.cls : '';
-  $('phoneInput').value = student ? student.phone : '';
-  $('amountInput').value = student ? student.amount : '';
-  $('statusInput').value = student ? student.status : 'NOT PAID';
-
-  $('formError').textContent = '';
-
-  $('studentDialog').showModal();
-}
-
-$('addBtn').addEventListener('click', () => openDialog(null));
-
-$('cancelBtn').addEventListener('click', () => {
-  $('studentDialog').close();
-});
-
-$('studentForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-
-  $('saveBtn').disabled = true;
-  $('formError').textContent = '';
-
-  const data = {
-    name: $('nameInput').value.trim(),
-    parent: $('parentInput').value.trim(),
-    cls: $('classInput').value,
-    phone: $('phoneInput').value.trim(),
-    amount: Number($('amountInput').value),
-    status: $('statusInput').value
-  };
-
-  try {
-    if (editingRow !== null) {
-      await api('update', {
-        row: editingRow,
-        ...data
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Shalini Tuition Center</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Student Registration Page -->
+  <main id="studentView" class="container">
+    <header class="topbar">
+      <h1 class="brand">Shalini Tuition Center</h1>
+      <button class="btn outline" id="adminOpenBtn" type="button">
+        Admin Login
+      </button>
+    </header>
+
+    <section class="login-card">
+      <h2>Student Registration</h2>
+      <p class="muted">Please enter your details below.</p>
+
+      <form id="registrationForm">
+        <label for="studentName">Student Name</label>
+        <input type="text" id="studentName" maxlength="60" required>
+
+        <label for="parentName">Parent Name</label>
+        <input type="text" id="parentName" maxlength="60" required>
+
+        <label for="studentClass">Class</label>
+        <select id="studentClass" required>
+          <option value="">Select class</option>
+          <option>LKG</option>
+          <option>UKG</option>
+          <option>1st</option>
+          <option>2nd</option>
+          <option>3rd</option>
+          <option>4th</option>
+          <option>5th</option>
+          <option>6th</option>
+          <option>7th</option>
+          <option>8th</option>
+          <option>9th</option>
+          <option>10th</option>
+          <option>11th</option>
+          <option>12th</option>
+        </select>
+
+        <label for="studentPhone">Phone Number</label>
+        <input
+          type="tel"
+          id="studentPhone"
+          inputmode="numeric"
+          maxlength="10"
+          pattern="[6-9][0-9]{9}"
+          required
+        >
+
+        <label for="studentAmount">Amount (₹)</label>
+        <input
+          type="number"
+          id="studentAmount"
+          min="1"
+          max="1000000"
+          step="1"
+          required
+        >
+
+        <p id="registrationMessage" class="message" role="status"></p>
+
+        <button type="submit" class="btn primary" id="registerBtn">
+          Submit Registration
+        </button>
+      </form>
+
+      <!-- UPI Payment Section -->
+      <div id="upiPaymentSection" hidden>
+        <hr>
+        <h3>UPI Payment</h3>
+        <p>UPI ID: <strong>mugil26052016@okicici</strong></p>
+        <p class="muted">
+          Registration successful! Click below to open your UPI payment app.
+          Enter the amount in your UPI app.
+        </p>
+
+        <button type="button" class="btn primary" id="payNowBtn">
+          Pay Now
+        </button>
+
+        <p class="muted">
+          Payment status will be updated by the admin after verification.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Admin Login -->
+  <main id="loginView" class="login-wrap" hidden>
+    <form id="loginForm" class="login-card">
+      <h1 class="brand">Shalini Tuition Center</h1>
+      <p class="muted">Admin login</p>
+
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        autocomplete="current-password"
+        required
+      >
+
+      <p id="loginError" class="error" role="alert"></p>
+
+      <button type="submit" class="btn primary" id="loginBtn">
+        Log in
+      </button>
+
+      <button type="button" class="btn outline" id="backToStudentBtn">
+        Back to Student Form
+      </button>
+    </form>
+  </main>
+
+  <!-- Admin Dashboard -->
+  <div id="appView" hidden>
+    <header class="topbar">
+      <h1 class="brand">Shalini Tuition Center</h1>
+      <button class="btn light" id="logoutBtn">Log out</button>
+    </header>
+
+    <main class="container">
+      <section class="cards" aria-label="Summary">
+        <div class="card">
+          <span class="card-num" id="totalCount">0</span>
+          <span>Total students</span>
+        </div>
+
+        <div class="card paid">
+          <span class="card-num" id="paidCount">0</span>
+          <span>Paid</span>
+        </div>
+
+        <div class="card unpaid">
+          <span class="card-num" id="unpaidCount">0</span>
+          <span>Not paid</span>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <input
+          type="search"
+          id="search"
+          placeholder="Search by student name"
+        >
+
+        <select id="classFilter"></select>
+
+        <select id="statusFilter">
+          <option value="">All payments</option>
+          <option value="PAID">PAID</option>
+          <option value="NOT PAID">NOT PAID</option>
+        </select>
+
+        <button class="btn primary" id="addBtn">Add student</button>
+        <button class="btn outline" id="exportBtn">Export CSV</button>
+      </section>
+
+      <p id="message" class="message" role="status"></p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Class</th>
+              <th>Parent Name</th>
+              <th>Phone</th>
+              <th>Amount</th>
+              <th>Payment Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+
+        <p id="emptyMsg" class="empty" hidden>No students found.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Admin Add / Edit Dialog -->
+  <dialog id="studentDialog">
+    <form id="studentForm" method="dialog">
+      <h2 id="dialogTitle">Add student</h2>
+
+      <label for="nameInput">Student Name</label>
+      <input type="text" id="nameInput" maxlength="60" required>
+
+      <label for="parentInput">Parent Name</label>
+      <input type="text" id="parentInput" maxlength="60">
+
+      <label for="classInput">Class</label>
+      <select id="classInput" required></select>
+
+      <label for="phoneInput">Phone Number</label>
+      <input type="tel" id="phoneInput" maxlength="10">
+
+      <label for="amountInput">Amount (₹)</label>
+      <input type="number" id="amountInput" min="1" step="1">
+
+      <label for="statusInput">Payment Status</label>
+      <select id="statusInput" required>
+        <option value="NOT PAID">NOT PAID</option>
+        <option value="PAID">PAID</option>
+      </select>
+
+      <p id="formError" class="error" role="alert"></p>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn outline" id="cancelBtn">
+          Cancel
+        </button>
+
+        <button type="submit" class="btn primary" id="saveBtn">
+          Save student
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+
+  <!-- UPI Payment Button -->
+  <script>
+    const UPI_ID = "mugil26052016@okicici";
+    const PAYEE_NAME = "Shalini Tuition Center";
+
+    const payNowButton = document.getElementById("payNowBtn");
+
+    if (payNowButton) {
+      payNowButton.addEventListener("click", function () {
+        const upiLink =
+          "upi://pay?pa=" + encodeURIComponent(UPI_ID) +
+          "&pn=" + encodeURIComponent(PAYEE_NAME) +
+          "&cu=INR";
+
+        window.location.href = upiLink;
       });
-    } else {
-      await api('add', data);
     }
+  </script>
 
-    $('studentDialog').close();
-    await loadStudents();
-
-  } catch (error) {
-    $('formError').textContent = error.message;
-
-  } finally {
-    $('saveBtn').disabled = false;
-  }
-});
-
-/* ---------- FILTERS ---------- */
-
-function fillClassOptions() {
-  const filter = $('classFilter');
-  const input = $('classInput');
-
-  filter.add(new Option('All classes', ''));
-  input.add(new Option('Select class', ''));
-
-  CLASSES.forEach(cls => {
-    filter.add(new Option(cls, cls));
-    input.add(new Option(cls, cls));
-  });
-}
-
-['search', 'classFilter', 'statusFilter'].forEach(id => {
-  $(id).addEventListener('input', render);
-});
-
-/* ---------- CSV EXPORT ---------- */
-
-function csvCell(value) {
-  let text = String(value ?? '');
-
-  if (/^[=+\-@]/.test(text)) {
-    text = "'" + text;
-  }
-
-  return '"' + text.replace(/"/g, '""') + '"';
-}
-
-$('exportBtn').addEventListener('click', function() {
-  const rows = getFiltered(
-    $('search').value.trim().toLowerCase(),
-    $('classFilter').value,
-    $('statusFilter').value
-  );
-
-  if (!rows.length) {
-    setMessage('Nothing to export.');
-    return;
-  }
-
-  const headers = [
-    'Student Name',
-    'Student Class',
-    'Parent Name',
-    'Phone Number',
-    'Amount',
-    'Payment Status'
-  ];
-
-  const lines = [
-    headers.map(csvCell).join(',')
-  ];
-
-  rows.forEach(s => {
-    lines.push([
-      s.name,
-      s.cls,
-      s.parent,
-      s.phone,
-      s.amount,
-      s.status
-    ].map(csvCell).join(','));
-  });
-
-  const blob = new Blob(
-    ['\uFEFF' + lines.join('\r\n')],
-    { type: 'text/csv;charset=utf-8;' }
-  );
-
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-
-  link.href = url;
-  link.download = 'shalini-tuition-students.csv';
-
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  URL.revokeObjectURL(url);
-});
-
-/* ---------- START ---------- */
-
-fillClassOptions();
-
-if (token) {
-  showApp().catch(showLogin);
-} else {
-  showStudent();
-}
+</body>
+</html>
+```
