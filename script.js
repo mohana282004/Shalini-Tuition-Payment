@@ -1,7 +1,7 @@
 /* Shalini Tuition Center - frontend logic */
 
 // Paste your Google Apps Script Web app URL here (it ends with /exec)
-const API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxukpl7y6VzbHLVz_U7OxzgscTW0S8b-7bQJBv7u5UcT8M4m9TfJVkWz_ByzjGCNPhggg/exec';
 
 const CLASSES = ['LKG', 'UKG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];
 
