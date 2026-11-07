@@ -1,199 +1,106 @@
-
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f3f5fb;
-  color: #222;
-}
-
-[hidden] {
-  display: none !important;
-}
-
-.container {
-  width: min(1100px, 94%);
-  margin: 25px auto;
-}
-
-.topbar {
+  min-height: 100vh;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 25px;
-}
-
-.topbar h1 {
-  color: #263b80;
-  font-size: 25px;
-}
-
-.card {
-  background: white;
-  max-width: 600px;
-  margin: 30px auto;
-  padding: 28px;
-  border-radius: 12px;
-  box-shadow: 0 3px 15px #00000012;
-}
-
-label {
-  display: block;
-  margin: 15px 0 6px;
-  font-weight: bold;
-}
-
-input, select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ccd1dd;
-  border-radius: 6px;
-  font-size: 15px;
-  background: white;
-}
-
-.btn {
-  padding: 11px 17px;
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  margin-top: 12px;
-}
-
-.primary {
-  background: #2949a5;
-  color: white;
-}
-
-.outline {
-  background: white;
-  color: #2949a5;
-  border: 1px solid #2949a5;
-}
-
-button:disabled {
-  opacity: .6;
-  cursor: not-allowed;
-}
-
-#registrationForm .btn,
-#loginForm .btn {
-  width: 100%;
-}
-
-#upiPaymentSection {
-  margin-top: 25px;
-  padding: 18px;
-  background: #eef8f0;
-  border-radius: 8px;
-}
-
-#upiPaymentSection .btn {
-  width: 100%;
-  background: #168447;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.stat {
-  background: white;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px #0000000c;
+  font-family: Arial, sans-serif;
+  background: #f7f3f2;
+  color: #4e302d;
 }
 
-.stat strong {
-  display: block;
-  font-size: 25px;
-  margin-top: 10px;
-}
-
-.toolbar {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto auto;
-  gap: 10px;
-  align-items: center;
-  margin: 20px 0;
-}
-
-.table-wrap {
-  overflow-x: auto;
-  background: white;
-  border-radius: 8px;
-}
-
-table {
-  border-collapse: collapse;
+.payment-card {
   width: 100%;
-  min-width: 750px;
+  max-width: 550px;
+  background: white;
+  padding: 38px 30px 45px;
+  border-radius: 25px;
+  text-align: center;
+  box-shadow: 0 15px 45px rgba(0,0,0,0.08);
 }
 
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid #e6e8ef;
-  text-align: left;
+h1 {
+  font-size: 32px;
+  margin: 0 0 20px;
+  color: #80504a;
 }
 
-th {
-  background: #edf0f8;
-}
-
-.error {
-  color: #c62828;
-}
-
-#registrationMessage, #message {
-  color: #176b39;
-}
-
-.muted {
-  color: #666;
+.welcome {
+  font-size: 20px;
   line-height: 1.5;
+  margin-bottom: 30px;
 }
 
-dialog {
-  width: min(450px, 94%);
-  border: 0;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 5px 30px #0004;
+.upi-box {
+  background: #f7f3f2;
+  border-radius: 15px;
+  padding: 17px;
+  margin-bottom: 25px;
+  font-size: 20px;
+  color: #111;
 }
 
-dialog::backdrop {
-  background: #0007;
+.upi-box strong {
+  display: block;
+  margin-bottom: 3px;
 }
 
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+button {
+  width: 100%;
+  border: none;
+  padding: 20px;
+  border-radius: 15px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-@media (max-width: 700px) {
-  .stats {
-    grid-template-columns: 1fr;
+.pay-button {
+  background: #80504a;
+  color: white;
+  margin-bottom: 15px;
+}
+
+.pay-button:hover {
+  background: #683e39;
+}
+
+.copy-button {
+  background: #eee7e5;
+  color: #4e302d;
+}
+
+.copy-button:hover {
+  background: #e5d9d6;
+}
+
+.instruction {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #555;
+  margin-top: 25px;
+}
+
+.message {
+  color: green;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .payment-card {
+    padding: 30px 20px;
   }
 
-  .toolbar {
-    grid-template-columns: 1fr;
+  h1 {
+    font-size: 26px;
   }
 
-  .card {
-    padding: 20px;
-  }
-
-  .topbar h1 {
-    font-size: 20px;
+  .welcome {
+    font-size: 18px;
   }
 }
