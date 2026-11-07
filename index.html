@@ -1,168 +1,47 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Shalini Tuition Center</title>
+  <title>Shalini Tuition Center - Payment</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <main id="studentView" class="container">
-    <header class="topbar">
-      <h1>Shalini Tuition Center</h1>
-      <button class="btn outline" id="adminOpenBtn">Admin Login</button>
-    </header>
+  <main class="payment-card">
 
-    <section class="card">
-      <h2>Student Registration</h2>
-      <p>Please enter your details below.</p>
+    <h1>Shalini Tuition Center</h1>
 
-      <form id="registrationForm">
-        <label>Student Name</label>
-        <input id="studentName" maxlength="60" required>
+    <p class="welcome">
+      Welcome! Please use the button below to pay your tuition fee.
+    </p>
 
-        <label>Parent Name</label>
-        <input id="parentName" maxlength="60" required>
-
-        <label>Class</label>
-        <select id="studentClass" required>
-          <option value="">Select Class</option>
-          <option>LKG</option><option>UKG</option>
-          <option>1st</option><option>2nd</option>
-          <option>3rd</option><option>4th</option>
-          <option>5th</option><option>6th</option>
-          <option>7th</option><option>8th</option>
-          <option>9th</option><option>10th</option>
-          <option>11th</option><option>12th</option>
-        </select>
-
-        <label>Phone Number</label>
-        <input id="studentPhone" type="tel" inputmode="numeric"
-          maxlength="10" pattern="[6-9][0-9]{9}" required>
-
-        <label>Amount (₹)</label>
-        <input id="studentAmount" type="number"
-          min="1" max="1000000" step="1" required>
-
-        <p id="registrationMessage" role="status"></p>
-
-        <button class="btn primary" id="registerBtn" type="submit">
-          Submit Registration
-        </button>
-      </form>
-
-      <div id="upiPaymentSection" hidden>
-        <hr>
-        <h3>UPI Payment</h3>
-        <p>UPI ID: <strong>mugil26052016@okicici</strong></p>
-        <p id="paymentAmountText"></p>
-        <button class="btn primary" id="payNowBtn" type="button">
-          Pay Now
-        </button>
-        <p class="muted">
-          After payment, the admin will verify and update your payment status.
-        </p>
-      </div>
-    </section>
-  </main>
-
-  <main id="loginView" class="container" hidden>
-    <section class="card">
-      <h2>Admin Login</h2>
-      <form id="loginForm">
-        <label>Admin Password</label>
-        <input type="password" id="password" required>
-        <p id="loginError" class="error"></p>
-        <button class="btn primary" type="submit" id="loginBtn">Login</button>
-        <button class="btn outline" type="button" id="backToStudentBtn">
-          Back
-        </button>
-      </form>
-    </section>
-  </main>
-
-  <main id="appView" class="container" hidden>
-    <header class="topbar">
-      <h1>Admin Dashboard</h1>
-      <button class="btn outline" id="logoutBtn">Logout</button>
-    </header>
-
-    <section class="stats">
-      <div class="stat">Total Students <strong id="totalCount">0</strong></div>
-      <div class="stat">Paid <strong id="paidCount">0</strong></div>
-      <div class="stat">Not Paid <strong id="unpaidCount">0</strong></div>
-    </section>
-
-    <section class="toolbar">
-      <input type="search" id="search" placeholder="Search student">
-      <select id="classFilter">
-        <option value="">All Classes</option>
-      </select>
-      <select id="statusFilter">
-        <option value="">All Payments</option>
-        <option value="PAID">PAID</option>
-        <option value="NOT PAID">NOT PAID</option>
-      </select>
-      <button class="btn primary" id="addBtn">Add Student</button>
-      <button class="btn outline" id="exportBtn">Export CSV</button>
-    </section>
-
-    <p id="message" role="status"></p>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Student</th>
-            <th>Class</th>
-            <th>Parent</th>
-            <th>Phone</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-      <p id="emptyMsg" hidden>No students found.</p>
+    <div class="upi-box">
+      <strong>UPI ID</strong>
+      <div>mugil26052016@okicici</div>
     </div>
+
+    <button id="payNowBtn" class="pay-button">
+      PAY NOW
+    </button>
+
+    <button id="copyBtn" class="copy-button">
+      Copy UPI ID
+    </button>
+
+    <p id="copyMessage" class="message"></p>
+
+    <p class="instruction">
+      No amount is pre-filled. Enter the amount in your UPI app.
+      After payment, complete your payment confirmation separately.
+    </p>
+
+    <p class="instruction">
+      If PAY NOW does not open your UPI app, copy the UPI ID above
+      and pay manually.
+    </p>
+
   </main>
-
-  <dialog id="studentDialog">
-    <form id="studentForm">
-      <h2 id="dialogTitle">Add Student</h2>
-      <label>Student Name</label>
-      <input id="nameInput" required maxlength="60">
-
-      <label>Parent Name</label>
-      <input id="parentInput" required maxlength="60">
-
-      <label>Class</label>
-      <input id="classInput" required>
-
-      <label>Phone Number</label>
-      <input id="phoneInput" maxlength="10">
-
-      <label>Amount</label>
-      <input id="amountInput" type="number" min="1">
-
-      <label>Payment Status</label>
-      <select id="statusInput">
-        <option value="NOT PAID">NOT PAID</option>
-        <option value="PAID">PAID</option>
-      </select>
-
-      <p id="formError" class="error"></p>
-
-      <div class="dialog-actions">
-        <button type="button" class="btn outline" id="cancelBtn">Cancel</button>
-        <button type="submit" class="btn primary">Save</button>
-      </div>
-    </form>
-  </dialog>
 
   <script src="script.js"></script>
 </body>
