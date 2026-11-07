@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#7b4b45">
+  <title>Shalini Tuition Center - Fee Payment</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      padding: 24px; font-family: Arial, sans-serif; color: #292524;
+      background: #f7f3f1;
+    }
+    main {
+      width: min(100%, 440px); background: #fff; border-radius: 20px;
+      padding: 32px 24px; text-align: center;
+      box-shadow: 0 10px 35px rgba(0,0,0,.08);
+    }
+    h1 { margin: 0 0 10px; color: #70443f; font-size: 27px; }
+    p { line-height: 1.55; color: #625b58; }
+    .upi { margin: 22px 0 16px; padding: 14px; border-radius: 12px; background: #f7f3f1; overflow-wrap: anywhere; }
+    a.pay, button.copy {
+      display: block; width: 100%; border: 0; border-radius: 12px;
+      padding: 16px; font-size: 17px; font-weight: 700; cursor: pointer;
+      text-decoration: none;
+    }
+    a.pay { background: #7b4b45; color: white; margin: 20px 0 12px; }
+    button.copy { background: #eee7e4; color: #49332f; }
+    .note { font-size: 13px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Shalini Tuition Center</h1>
+    <p>Welcome! Please use the button below to pay your tuition fee.</p>
+
+    <div class="upi">
+      <strong>UPI ID</strong><br>
+      mugil26052016@okicici
+    </div>
+
+    <a class="pay"
+       href="upi://pay?pa=mugil26052016%40okicici&amp;pn=Shalini%20Tuition%20Center&amp;cu=INR">
+      PAY NOW
+    </a>
+
+    <button class="copy" type="button" onclick="copyUpi()">Copy UPI ID</button>
+
+    <p class="note">
+      No amount is pre-filled. Enter the amount in your UPI app.
+      After payment, return to the Google Form and select PAID.
+    </p>
+    <p class="note">
+      If PAY NOW does not open your UPI app, copy the UPI ID above and pay manually.
+    </p>
+  </main>
+
+  <script>
+    function copyUpi() {
+      const upi = "mugil26052016@okicici";
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(upi).then(
+          () => alert("UPI ID copied."),
+          () => alert("Please copy this UPI ID manually: " + upi)
+        );
+      } else {
+        alert("Please copy this UPI ID: " + upi);
+      }
+    }
+  </script>
+</body>
+</html>
